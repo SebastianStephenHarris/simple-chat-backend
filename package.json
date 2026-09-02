@@ -6,6 +6,7 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "web-push": "^3.6.7",
     "ws": "^8.13.0"
   }
 }
