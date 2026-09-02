@@ -10,7 +10,7 @@ const MAX_URL_LENGTH = 1_000_000; // room for large base64 image data URLs
 const MAX_PAYLOAD = 2 * 1024 * 1024; // 2 MB WebSocket frame cap
 const MAX_TRACKED_MESSAGES = 2000;
 
-// messageId -> { senderId, senderUsername, seenBy:Set<clientId>, deliveredTo:Set<clientId> }
+// messageId -> { senderId, senderUsername, seenBy:Set<clientId> }
 const messages = new Map();
 // clientId -> { ws, username, color }
 const clients = new Map();
@@ -102,20 +102,10 @@ function normalizeMedia(data, client) {
   return { type, username, [urlKey]: url };
 }
 
-function broadcastChatMessage(senderId, payload, entry) {
-  for (const [rid, rc] of clients) {
+function broadcastChatMessage(payload) {
+  for (const [, rc] of clients) {
     if (rc.ws.readyState !== WebSocket.OPEN) continue;
-
     send(rc.ws, payload);
-
-    if (rid === senderId || !entry) continue;
-
-    if (!entry.deliveredTo.has(rid)) {
-      entry.deliveredTo.add(rid);
-      if (rc.username) {
-        sendTo(senderId, { type: "status", id: payload.id, username: rc.username, status: "delivered" });
-      }
-    }
   }
 }
 
@@ -204,13 +194,12 @@ wss.on("connection", (ws, request) => {
         const entry = {
           senderId: clientId,
           senderUsername: safe.username,
-          seenBy: new Set(),
-          deliveredTo: new Set()
+          seenBy: new Set()
         };
         messages.set(id, entry);
         pruneMessages();
 
-        broadcastChatMessage(clientId, { ...safe, id, senderId: clientId }, entry);
+        broadcastChatMessage({ ...safe, id, senderId: clientId });
         break;
       }
     }
@@ -226,7 +215,6 @@ wss.on("connection", (ws, request) => {
 
     for (const m of messages.values()) {
       m.seenBy.delete(clientId);
-      m.deliveredTo.delete(clientId);
     }
 
     if (name) {
