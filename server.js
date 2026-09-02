@@ -161,6 +161,8 @@ wss.on("connection", (ws, request) => {
         client.username = newName;
         if (typeof data.color === "string") client.color = data.color.slice(0, 7);
 
+        if (oldName === newName) break; // colour-only update, nothing to announce
+
         broadcast({ type: "rename", from: oldName, username: newName });
         broadcast({ type: "online", users: roster() });
         break;
