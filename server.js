@@ -102,9 +102,18 @@ function pruneMessages() {
   }
 }
 
+function normalizeFmt(fmt) {
+  if (!fmt || typeof fmt !== "object") return undefined;
+  const out = {};
+  if (typeof fmt.font === "string" && fmt.font && fmt.font.length <= 120) out.font = fmt.font;
+  if (fmt.bold === true) out.bold = true;
+  if (fmt.italic === true) out.italic = true;
+  if (fmt.underline === true) out.underline = true;
+  return Object.keys(out).length ? out : undefined;
+}
+
 function normalizeMedia(data, client) {
   if (!data || typeof data !== "object") return null;
-
   const type = ALLOWED_TYPES.has(String(data.type)) ? String(data.type) : "";
   if (!type) return null;
 
@@ -120,7 +129,8 @@ function normalizeMedia(data, client) {
       username,
       color: client.color || (typeof data.color === "string" ? data.color.slice(0, 7) : undefined),
       text,
-      reply: typeof data.reply === "string" && data.reply ? String(data.reply).slice(0, 500) : undefined
+      reply: typeof data.reply === "string" && data.reply ? String(data.reply).slice(0, 500) : undefined,
+      fmt: normalizeFmt(data.fmt)
     };
   }
 
