@@ -109,6 +109,7 @@ function normalizeFmt(fmt) {
   if (fmt.bold === true) out.bold = true;
   if (fmt.italic === true) out.italic = true;
   if (fmt.underline === true) out.underline = true;
+  if (typeof fmt.color === "string" && /^#[0-9a-f]{3,8}$/i.test(fmt.color)) out.color = fmt.color;
   return Object.keys(out).length ? out : undefined;
 }
 
